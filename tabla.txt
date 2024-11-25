@@ -1,0 +1,22 @@
+1) CREATE TABLE `alumnos` (`legajo` int NOT NULL AUTO_INCREMENT,
+`nombre` varchar(50) NOT NULL,
+`apellido` varchar(50) NOT NULL,
+`dni` int NOT NULL,
+`fechaNacimiento` date NOT NULL,
+`telefono` int NOT NULL,
+`domicilio` varchar(50) NOT NULL,
+PRIMARY KEY (`legajo`));
+
+2) CREATE TABLE `cursos` (`idcursos` int NOT NULL AUTO_INCREMENT,
+`nombrecurso` varchar(50) NOT NULL,
+PRIMARY KEY (`idcursos`));
+
+
+3) CREATE TABLE `alumno_toma_curso` (`idalumnoTomaCurso` int NOT NULL AUTO_INCREMENT,
+`legajoAlumno` int NOT NULL,
+`idCurso` int NOT NULL,
+PRIMARY KEY (`idalumnoTomaCurso`),
+KEY `alumn_idx` (`legajoAlumno`),
+KEY `curse_idx` (`idCurso`),
+CONSTRAINT `alumn` FOREIGN KEY (`legajoAlumno`) REFERENCES `alumnos` (`legajo`),
+CONSTRAINT `curse` FOREIGN KEY (`idCurso`) REFERENCES `cursos` (`idcursos`));
