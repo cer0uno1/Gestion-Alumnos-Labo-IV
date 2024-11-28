@@ -10,6 +10,7 @@ conectar = mysql.connector.connect(
 )
 cursor = conectar.cursor()
 
+
 # Función para insertar datos
 def ingresoDatos():
     nombre = input("Nombre: ")
@@ -42,7 +43,7 @@ def ingresoDatos():
         if telefono.isdigit() and len(telefono) <= 10:
             break
         else:
-            print("El teléfono debe contener solo números y tener un máximo de 10 caracteres.")
+            print("El teléfono debe contener solo números y tener un máximo de 10 carácteres.")
     
     domicilio = input("Domicilio: ")
 
@@ -53,12 +54,14 @@ def ingresoDatos():
     cursor.execute(query, values)
     conectar.commit()
     print("Datos ingresados correctamente.\n")
-
+    
 # Función para consultar datos
 def consultaDatos():
     cursor.execute("SELECT * FROM alumnos")
     for (legajo, nombre, apellido, dni, fechaNacimiento, telefono, domicilio) in cursor.fetchall():
+        
         print(f"Legajo: {legajo}\n Nombre y Apellido: {nombre} {apellido}\n Documento: {dni}\n Fecha de nacimiento: {fechaNacimiento}\n Num. Telefono: {telefono}\n Domicilio: {domicilio}\n")
+        
         query = "SELECT cursos.nombrecurso FROM cursos JOIN alumno_toma_curso ON cursos.idcursos = alumno_toma_curso.idCurso WHERE alumno_toma_curso.legajoAlumno = %s"
         # Une la tabla de cursos con la de inscripción de alumnos a cursos, filtra solo las inscripciones del alumno requerido.
         cursor.execute(query, (legajo,))
@@ -69,11 +72,10 @@ def consultaDatos():
             print("Cursos del alumno:")
             for(nombrecurso) in cursos:
                 print(f"- {nombrecurso}")
-        
+            print("--------------------")
         else:
             print("Sin cursos asignados")
-            
-print("--------------------")
+            print("--------------------")
 
 # Función para eliminar datos, elimina solo los datos del alumno cuyo legajo es ingresado
 def eliminacionDatos():
@@ -81,9 +83,9 @@ def eliminacionDatos():
     
     # Verificar si el legajo existe
     cursor.execute("SELECT * FROM alumnos WHERE legajo = %s", (alumnoEliminar,))
-    alumno = cursor.fetchone()  # Recupera una fila
+    alumno = cursor.fetchone()  # Recupera solo un alumno
     
-    if alumno:  # Si se encuentra el alumno
+    if alumno:  # Si el alumno existe:
         print(f"Se encontró el alumno: {alumno}")
         confirmacion = input("¿Está seguro de que desea eliminar este alumno? (s/n): ").strip().lower()
         
@@ -103,7 +105,7 @@ def actualizarDatos():
     
     # Se comprueba si el alumno existe
     cursor.execute("SELECT * FROM alumnos WHERE legajo = %s", (alumnoActualizar,))
-    alumno = cursor.fetchone() # fetchone() solo toma la primer fila del resultado de la consulta, 
+    alumno = cursor.fetchone() # fetchone() solo toma la primer fila del resultado de la consulta
     
     # Si existe el alumno, se pide reingresar sus datos
     if alumno:
@@ -114,6 +116,8 @@ def actualizarDatos():
         fecha_nacimiento = input(f"Fecha de nacimiento (AAAA-MM-DD) [{alumno[4]}]: ") or alumno[4]
         telefono = input(f"Teléfono [{alumno[5]}]: ") or alumno[5]
         domicilio = input(f"Domicilio [{alumno[6]}]: ") or alumno[6]
+        
+    # Rescata como tupla los datos del alumno
         
     # Se actualizan los datos del alumno
         query = """UPDATE alumnos 
@@ -205,6 +209,8 @@ def menu():
         print("9. Salida")
         
         opcion = input("Seleccione una opción: ")
+        
+        # Se llama a la función que requiera la opción
         
         if opcion == '1':
             ingresoDatos()
