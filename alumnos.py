@@ -1,4 +1,5 @@
 import mysql.connector
+from datetime import datetime
 
 # Conexión a DB
 conectar = mysql.connector.connect(
@@ -9,13 +10,45 @@ conectar = mysql.connector.connect(
 )
 cursor = conectar.cursor()
 
+# Función para chequear si el legajo existe
+def legajoExiste():
+    cursor.execute("SELECT * FROM alumnos WHERE legajo = %s", (legajo,))
+    return cursor.fetchone() is not None
+
 # Función para insertar datos
 def ingresoDatos():
     nombre = input("Nombre: ")
     apellido = input("Apellido: ")
-    documento = input("Número de documento: ")
-    fecha_nacimiento = input("Fecha de nacimiento (AAAA-MM-DD): ")
-    telefono = input("Teléfono: ")
+    
+    # El número de DNI debe ser menor a 8 y, obviamente, un número
+    while True:
+        documento = input("Número de documento (máximo 8 dígitos): ")
+        if documento.isdigit() and len(documento) <= 8:
+            break
+        else:
+            print("El DNI debe contener solo números y tener un máximo de 8 caracteres.")
+            
+    # Se busca que la fecha tenga el formato correcto, y que no sea mayor al día actual
+    while True:
+        fecha_nacimiento = input("Fecha de nacimiento (AAAA-MM-DD): ")
+        try:
+            fecha_nac = datetime.strptime(fecha_nacimiento, "%Y-%m-%d")
+            if fecha_nac < datetime.now():
+                break
+            else:
+                print("La fecha de nacimiento no puede ser mayor a la fecha actual.")
+        except ValueError:
+            print("Formato de fecha incorrecto. Usa AAAA-MM-DD.")
+            
+            
+    # Chequea que el número de télefono sea un número menor a diez dígitos
+    while True:
+        telefono = input("Teléfono (máximo 10 dígitos): ")
+        if telefono.isdigit() and len(telefono) <= 10:
+            break
+        else:
+            print("El teléfono debe contener solo números y tener un máximo de 10 caracteres.")
+    
     domicilio = input("Domicilio: ")
 
 # Inserta todo lo ingresado en la base de datos de alumnos
@@ -50,9 +83,24 @@ print("--------------------")
 # Función para eliminar datos, elimina solo los datos del alumno cuyo legajo es ingresado
 def eliminacionDatos():
     alumnoEliminar = input("Ingrese el Legajo del alumno a eliminar: ")
-    cursor.execute("DELETE FROM alumnos WHERE legajo = %s", (alumnoEliminar,))
-    conectar.commit()
-    print("Alumno eliminado correctamente.")
+    
+    # Verificar si el legajo existe
+    cursor.execute("SELECT * FROM alumnos WHERE legajo = %s", (alumnoEliminar,))
+    alumno = cursor.fetchone()  # Recupera una fila
+    
+    if alumno:  # Si se encuentra el alumno
+        print(f"Se encontró el alumno: {alumno}")
+        confirmacion = input("¿Está seguro de que desea eliminar este alumno? (s/n): ").strip().lower()
+        
+        if confirmacion == 's':
+            cursor.execute("DELETE FROM alumnos WHERE legajo = %s", (alumnoEliminar,))
+            conectar.commit()
+            print("Alumno eliminado correctamente.")
+        else:
+            print("Operación cancelada.")
+    else:
+        print("No se encontró un alumno con ese legajo. Verifique el número ingresado.")
+
      
 # Función para actualizar datos
 def actualizarDatos():
@@ -81,6 +129,8 @@ def actualizarDatos():
         cursor.execute(query, values,)
         conectar.commit()
         print("Datos actualizados correctamente.")
+        
+    #Si el legajo no existe, no realiza ninguna acción
     else:
         print("No se encontró un alumno con ese Legajo.")
         
@@ -104,18 +154,46 @@ def consultarCursos():
         print("--------------------")
         
 
-# Asignación de cursos a alumnos
 def asignarCursos():
-    legajoAlumno = input("Ingresar legajo del alumno: ")
+    # Mostrar cursos disponibles
+    cursor.execute("SELECT idcursos, nombrecurso FROM cursos")
+    cursos = cursor.fetchall()
+    
+
+    
+    # Solicitar datos de entrada
+    legajoAlumno = input("\nIngresar legajo del alumno: ")
+    
+    # Le muestra al usuario los cursos disponibles
+    print("\nCursos disponibles:")
+    for curso in cursos:
+        print(f"ID: {curso[0]} - Nombre: {curso[1]}")
+        
     idCurso = input("Ingrese el ID del curso: ")
     
-# Se usa una tabla intermedia para que los alumnos puedan tener más de un curso
-    query = "INSERT INTO alumno_toma_curso (legajoAlumno, idCurso) VALUES (%s, %s)"
-    values = (legajoAlumno, idCurso,)
     
+    # Verifica alumno existe
+    cursor.execute("SELECT * FROM alumnos WHERE legajo = %s", (legajoAlumno,))
+    alumno = cursor.fetchone()
+    
+    # Verifica si el ID del curso existe
+    cursor.execute("SELECT * FROM cursos WHERE idcursos = %s", (idCurso,))
+    curso = cursor.fetchone()
+    
+    if not alumno:
+        print("No se encontró un alumno con ese legajo. Verifique el número ingresado.")
+        return
+    if not curso:
+        print("No se encontró un curso con ese ID. Verifique el número ingresado.")
+        return
+    
+    # Se inserta la asignación en una tabla intermedia, para permitir más de un curso por alumno
+    query = "INSERT INTO alumno_toma_curso (legajoAlumno, idCurso) VALUES (%s, %s)"
+    values = (legajoAlumno, idCurso)
     cursor.execute(query, values)
     conectar.commit()
-    print("Curso asignado correctamente")
+    
+    print("Curso asignado correctamente.")
 
 # Menú
 def menu():
