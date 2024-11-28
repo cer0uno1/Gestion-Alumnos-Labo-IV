@@ -10,11 +10,6 @@ conectar = mysql.connector.connect(
 )
 cursor = conectar.cursor()
 
-# Función para chequear si el legajo existe
-def legajoExiste():
-    cursor.execute("SELECT * FROM alumnos WHERE legajo = %s", (legajo,))
-    return cursor.fetchone() is not None
-
 # Función para insertar datos
 def ingresoDatos():
     nombre = input("Nombre: ")
