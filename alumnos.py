@@ -57,8 +57,8 @@ def ingresoDatos():
     
 # Función para consultar datos
 def consultaDatos():
-    cursor.execute("SELECT * FROM alumnos")
-    for (legajo, nombre, apellido, dni, fechaNacimiento, telefono, domicilio) in cursor.fetchall():
+    cursor.execute("SELECT * FROM alumnos WHERE activo = 1") # Solo mostrará a los alumnos activos
+    for (legajo, nombre, apellido, dni, fechaNacimiento, telefono, domicilio, activo,) in cursor.fetchall():
         
         print(f"Legajo: {legajo}\n Nombre y Apellido: {nombre} {apellido}\n Documento: {dni}\n Fecha de nacimiento: {fechaNacimiento}\n Num. Telefono: {telefono}\n Domicilio: {domicilio}\n")
         
@@ -77,26 +77,27 @@ def consultaDatos():
             print("Sin cursos asignados")
             print("--------------------")
 
-# Función para eliminar datos, elimina solo los datos del alumno cuyo legajo es ingresado
+# Función para "eliminar" datos, en lugar de eliminar fisicamente los datos, se realiza un borrado lógico
 def eliminacionDatos():
     alumnoEliminar = input("Ingrese el Legajo del alumno a eliminar: ")
     
-    # Verificar si el legajo existe
-    cursor.execute("SELECT * FROM alumnos WHERE legajo = %s", (alumnoEliminar,))
-    alumno = cursor.fetchone()  # Recupera solo un alumno
+    # Verificar si el legajo existe y está activo
+    cursor.execute("SELECT * FROM alumnos WHERE legajo = %s AND activo = 1", (alumnoEliminar,))
+    alumno = cursor.fetchone()
     
-    if alumno:  # Si el alumno existe:
-        print(f"Se encontró el alumno: {alumno}")
+    if alumno:
+        print(f"Se encontró al alumno: {alumno[2], alumno[1]}")
         confirmacion = input("¿Está seguro de que desea eliminar este alumno? (s/n): ").strip().lower()
         
+        # Al ingresar 's', se ejecuta el comando
         if confirmacion == 's':
-            cursor.execute("DELETE FROM alumnos WHERE legajo = %s", (alumnoEliminar,))
+            cursor.execute("UPDATE alumnos SET activo = 0 WHERE legajo = %s", (alumnoEliminar,))
             conectar.commit()
             print("Alumno eliminado correctamente.")
         else:
             print("Operación cancelada.")
     else:
-        print("No se encontró un alumno con ese legajo. Verifique el número ingresado.")
+        print("No se encontró un alumno activo con ese legajo.")
 
      
 # Función para actualizar datos
@@ -109,6 +110,13 @@ def actualizarDatos():
     
     # Si existe el alumno, se pide reingresar sus datos
     if alumno:
+        if alumno[7] == 0:  # Si activo es exactamente igual a 0 (no activo), se ejecuta el código para reactivar
+            reactivar = input("Este alumno está inactivo. ¿Desea reactivarlo? (s/n): ").strip().lower()
+            if reactivar == 's':
+                cursor.execute("UPDATE alumnos SET activo = 1 WHERE legajo = %s", (alumnoActualizar,))
+                conectar.commit()
+                print("Alumno reactivado correctamente.")
+            
         print("Ingrese los nuevos datos (deje en blanco para mantener el actual):")
         nombre = input(f"Nombre [{alumno[1]}]: ") or alumno[1]
         apellido = input(f"Apellido [{alumno[2]}]: ") or alumno[2]
@@ -206,7 +214,7 @@ def menu():
         print("6. Añadir cursos")
         print("7. Consulta de cursos")
         print("8. Asignación de cursos")
-        print("9. Salida")
+        print("9. Salida \n" )
         
         opcion = input("Seleccione una opción: ")
         
