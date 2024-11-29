@@ -5,6 +5,7 @@
 `fechaNacimiento` date NOT NULL,
 `telefono` int NOT NULL,
 `domicilio` varchar(50) NOT NULL,
+`activo` tinyint NOT NULL,
 PRIMARY KEY (`legajo`));
 
 2) CREATE TABLE `cursos` (`idcursos` int NOT NULL AUTO_INCREMENT,
